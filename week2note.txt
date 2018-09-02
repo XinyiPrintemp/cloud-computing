@@ -1,0 +1,38 @@
+Week 2 
+Lesson1 Gossip
+1.1 multicast problem
+tree base multicast protocols:
+use either ACKs or NAKs 
+(Scalable Reliable Multicast): Use NAKs, add random delays, use exponential backoff to avoid NAK problem
+(Reliable Multicast Transport Protocol): ACKs, sent to designated receivers, which retransmit missing multicast 
+
+1.2 gossip protocol
+protocol rounds b random targets per round once you are affected,
+push gossip: once your receive one,  you start gossiping out
+pull gossip: periodically send query to random selected nodes, do you received recent msgs? get the msg 
+fast, reliable, fault tolerance, scalable
+
+Lesson2 Membership
+2.1 group membership list
+list records all the alive processes in the system, a failure detector and a dissemination system with detect and disseminate the failure proces to all the other processes
+
+2.2 failure detectror 
+properties: completeness,  accuracy, (impossible in lossy network), speed, scale(equal load)
+            guaranteed,    partial guarantee
+
+centralized heartbeating 
+ring heartbeating(unpredictable on simultaneous multiple failures)
+all to all heartbeating 
+
+2.3 gossip style membership(failure detector)
+nodes periodically gossip their membership list 
+on receipt, the local membership list is updated to local time 
+if the heartbeat has not increased for more than Tfail seconds, the membership is considered failed
+after Tcleanup seconds, it will delete the member from the list
+
+2.4 SWIM failure detector
+pi send ping to pj 
+if not received, select k random process send ping to pj, k random process ping pj and ack to pi
+
+
+
