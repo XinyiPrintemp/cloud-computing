@@ -31,8 +31,11 @@
 enum MsgTypes{
     JOINREQ,
     JOINREP,
+    HEARBEAT,
     DUMMYLASTMSGTYPE
 };
+
+
 
 /**
  * STRUCT NAME: MessageHdr
@@ -72,8 +75,19 @@ public:
 	bool recvCallBack(void *env, char *data, int size);
 	void nodeLoopOps();
 	int isNullAddress(Address *addr);
+
 	Address getJoinAddress();
+	Address getNodeAddress(int id, short port); 
+
 	void initMemberListTable(Member *memberNode);
+	void addNodeToMemberList(int id, short port, long heartbeat, long timestamp);
+    void removeNodeFromMemberList(int id, short port);
+
+
+	void sendJOINREQMsg(Address *joinaddr);
+    void sendJOINREPMsg(Address *destinationAddr);
+    void sendHEARTBEATMsg(Address *destinationAddr);
+
 	void printAddress(Address *addr);
 	virtual ~MP1Node();
 };

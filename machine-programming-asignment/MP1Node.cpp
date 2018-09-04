@@ -209,15 +209,47 @@ void MP1Node::checkMessages() {
     return;
 }
 
+
+
+void MP1Node::addNodeToMemberList(int id, short port, long heartbeat, long timestamp) {
+    MemberListEntry* newEntry = new MemberListEntry(id, port, heartbeat, timestamp);
+    memberNode->memberList.push_back(*newEntry);
+    #ifdef DEBUGLOG
+        log->logNodeAdd(&memberNode->addr, &newNodeAddress);
+    #endif
+    delete newEntry;
+}
+
+void MP1Node::sendJOINREPMsg(Address *destinationAddr) {
+    
+}
+
+
 /**
  * FUNCTION NAME: recvCallBack
  *
  * DESCRIPTION: Message handler for different message types
  */
 bool MP1Node::recvCallBack(void *env, char *data, int size ) {
-	/*
-	 * Your code goes here
-	 */
+	//MessageHdr* msg = (MessageHdr *)data;
+    
+    MessageHdr*  msg = (MessageHdr*) malloc(size * sizeof(char));
+    memcmp(msg, data, sizeof(MessageHdr));
+    
+    if(msg->msgType == JOINREQ) {
+        //parse msg 
+        int id; short port; long heartbeat;
+        memcpy(&id, data + sizeof(MessageHdr), sizeof(int));
+        memcpy(&port, data + sizeof(MessageHdr) + sizeof(int), sizeof(short));
+        memcpy(&heartbeat, data + sizeof(MessageHdr) + sizeof(int) + sizeof(short), sizeof(long));
+
+        addNodeToMemberList(id, port, heartbeat, memberNode->timeOutCounter);
+
+        Address newNodeAddress = getNodeAddress(id, port);
+
+        sendJOINREPMsg(newNodeAddress);
+
+    }
 }
 
 /**
@@ -258,6 +290,16 @@ Address MP1Node::getJoinAddress() {
     *(short *)(&joinaddr.addr[4]) = 0;
 
     return joinaddr;
+}
+
+Address MP1Node::getNodeAddress(int id, short port) {
+    Address nodeaddr;
+
+    memset(&nodeaddr, 0, sizeof(Address));
+    *(int*)(&nodeaddr.addr) = id;
+    *(short*)(&nodeaddr.addr[4]) = port;
+
+    return nodeaddr;
 }
 
 /**
