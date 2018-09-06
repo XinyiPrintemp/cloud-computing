@@ -78,10 +78,15 @@ public:
 
 	Address getJoinAddress();
 	Address getNodeAddress(int id, short port); 
+	bool isAddressEqualToNodeAddress(Address *address);
 
 	void initMemberListTable(Member *memberNode);
 	void addNodeToMemberList(int id, short port, long heartbeat, long timestamp);
     void removeNodeFromMemberList(int id, short port);
+    MemberListEntry* getNodeInMemberListTable(int id);
+
+    void serializeMemberListTableForJOINREPMessageSending(MessageHdr *msg);
+    void deserializeMemberListTableForJOINREPMessageReceiving(char *data); 
 
 
 	void sendJOINREQMsg(Address *joinaddr);
