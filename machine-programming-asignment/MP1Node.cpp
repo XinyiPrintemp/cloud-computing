@@ -96,8 +96,8 @@ int MP1Node::initThisNode(Address *joinaddr) {
 	/*
 	 * This function is partially implemented and may require changes
 	 */
-	int id = *(int*)(&memberNode->addr.addr);
-	int port = *(short*)(&memberNode->addr.addr[4]);
+	//int id = *(int*)(&memberNode->addr.addr);
+	//int port = *(short*)(&memberNode->addr.addr[4]);
 
 	memberNode->bFailed = false;
 	memberNode->inited = true;
@@ -159,10 +159,27 @@ int MP1Node::introduceSelfToGroup(Address *joinaddr) {
  *
  * DESCRIPTION: Wind up this node and clean up state
  */
+
+void MP1Node::cleanupNodeState() {
+    memberNode->inGroup = false;
+    
+    memberNode->nnb = 0;
+    memberNode->heartbeat = 0;
+    memberNode->pingCounter = TFAIL;
+    memberNode->timeOutCounter = -1;
+    initMemberListTable(memberNode);
+}
+
+
 int MP1Node::finishUpThisNode(){
    /*
     * Your code goes here
     */
+    memberNode->inited = false;
+    
+    // Cleanup node state
+    cleanupNodeState();
+
     return 0;
 }
 
@@ -213,13 +230,17 @@ void MP1Node::checkMessages() {
 
 
 void MP1Node::addNodeToMemberList(int id, short port, long heartbeat, long timestamp) {
-    Address newNodeAddress = getNodeAddress(id, port);
-    MemberListEntry* newEntry = new MemberListEntry(id, port, heartbeat, timestamp);
-    memberNode->memberList.push_back(*newEntry);
+    
+    if (getNodeInMemberListTable(id) == NULL) {
+        Address newNodeAddress = getNodeAddress(id, port);
+        MemberListEntry* newEntry = new MemberListEntry(id, port, heartbeat, timestamp);
+        memberNode->memberList.push_back(*newEntry);
     #ifdef DEBUGLOG
         log->logNodeAdd(&memberNode->addr, &newNodeAddress);
     #endif
-    delete newEntry;
+        delete newEntry;
+    }
+    
 }
 
 MemberListEntry* MP1Node::getNodeInMemberListTable(int id){
@@ -275,7 +296,7 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 	//MessageHdr* msg = (MessageHdr *)data;
     
     MessageHdr*  msg = (MessageHdr*) malloc(size * sizeof(char));
-    memcmp(msg, data, sizeof(MessageHdr));
+    memcpy(msg, data, sizeof(MessageHdr));  //memcpy or memcmp
     
     if(msg->msgType == JOINREQ) {
         //parse msg 
@@ -292,6 +313,7 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 
     }
     else if(msg->msgType == JOINREP) {
+        memberNode->inGroup = true; //why?
         deserializeMemberListTableForJOINREPMessageReceiving(data);
     }
     else if(msg->msgType == HEARBEAT) {
@@ -345,6 +367,7 @@ void MP1Node::nodeLoopOps() {
     else {
         memberNode->pingCounter--;
     }
+
     for(auto it = memberNode->memberList.begin(); it != memberNode->memberList.end(); ++it) {  
         Address nodeAddress = getNodeAddress(it->id, it->getport());
         if(!isAddressEqualToNodeAddress(&nodeAddress)) {
@@ -354,7 +377,7 @@ void MP1Node::nodeLoopOps() {
                 log->logNodeRemove(&memberNode->addr, &nodeAddress);
                 #endif
 
-                //break;
+                break; //why
             }
         }
     }

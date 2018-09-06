@@ -75,6 +75,7 @@ public:
 	bool recvCallBack(void *env, char *data, int size);
 	void nodeLoopOps();
 	int isNullAddress(Address *addr);
+	void cleanupNodeState();
 
 	Address getJoinAddress();
 	Address getNodeAddress(int id, short port); 
